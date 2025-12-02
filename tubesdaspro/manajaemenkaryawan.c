@@ -2,29 +2,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX 100
 
-#define RED "\033[1;31m"
-#define GREEN "\033[1;32m"
-#define CYAN "\033[1;36m"
-#define YELLOW "\033[1;33m"
-#define RESET "\033[0m"
+#define RED     "\033[1;31m"
+#define GREEN   "\033[1;32m"
+#define YELLOW  "\033[1;33m"
+#define BLUE    "\033[1;34m"
+#define CYAN    "\033[1;36m"
+#define RESET   "\033[0m"
 
-FILE *file;
+struct Karyawan {
+    int id;
+    char nama[50];
+    char jabatan[30];
+    float gaji;
+};
 
-float convertGaji(char *str) {
-    char clean[50];
-    int j = 0;
+struct Karyawan data[MAX];
+int jumlah = 0;
 
-    for(int i = 0; str[i] != '\0'; i++) {
-        if(str[i] != '.') {
-            clean[j++] = str[i];
-        }
-    }
-    clean[j] = '\0';
-
-    return atof(clean);
-}
-
+void loadData();
+void saveData();
+float convertGaji(char *str);
 
 void tambah();
 void tampil();
@@ -32,210 +31,194 @@ void cari();
 void update();
 void hapus();
 
+
 int main() {
     int pilihan;
+    loadData();
 
     while(1) {
-        printf(CYAN "\n=========== PROGRAM MANAJEMEN KARYAWAN ===========" RESET);
-        printf(YELLOW "\n1. Tambah Karyawan" RESET);
-        printf(YELLOW "\n2. Tampilkan Semua Data" RESET);
-        printf(YELLOW "\n3. Cari Karyawan" RESET);
-        printf(YELLOW "\n4. Update Data" RESET);
-        printf(YELLOW "\n5. Hapus Data" RESET);
-        printf(YELLOW "\n6. Keluar\n" RESET);
+        printf(CYAN "\n========== PROGRAM MANAJEMEN KARYAWAN (TXT) ==========\n" RESET);
+        printf(YELLOW "1. Tambah Karyawan\n" RESET);
+        printf(YELLOW "2. Tampilkan Semua Data\n" RESET);
+        printf(YELLOW "3. Cari Karyawan\n" RESET);
+        printf(YELLOW "4. Update Data\n" RESET);
+        printf(YELLOW "5. Hapus Data\n" RESET);
+        printf(YELLOW "6. Keluar\n" RESET);
         printf(CYAN "Pilih menu: " RESET);
 
         scanf("%d", &pilihan);
 
-        if(pilihan == 1) tambah();
-        else if(pilihan == 2) tampil();
-        else if(pilihan == 3) cari();
-        else if(pilihan == 4) update();
-        else if(pilihan == 5) hapus();
-        else if(pilihan == 6) {
+        if (pilihan == 1) tambah();
+        else if (pilihan == 2) tampil();
+        else if (pilihan == 3) cari();
+        else if (pilihan == 4) update();
+        else if (pilihan == 5) hapus();
+        else if (pilihan == 6) {
             printf(GREEN "\nProgram selesai!\n" RESET);
             break;
+        } else {
+            printf(RED "\nPilihan tidak valid!\n" RESET);
         }
-        else printf(RED "\nPilihan tidak valid!\n" RESET);
     }
+    return 0;
+}
+
+
+void loadData() {
+    FILE *file = fopen("data_karyawan.txt", "r");
+    if (!file) return;
+
+    jumlah = 0;
+    while (fscanf(file, "%d|%49[^|]|%29[^|]|%f\n",
+                  &data[jumlah].id,
+                  data[jumlah].nama,
+                  data[jumlah].jabatan,
+                  &data[jumlah].gaji) == 4) {
+        jumlah++;
+    }
+    fclose(file);
+}
+
+
+void saveData() {
+    FILE *file = fopen("data_karyawan.txt", "w");
+
+    for (int i = 0; i < jumlah; i++) {
+        fprintf(file, "%d|%s|%s|%.2f\n",
+                data[i].id,
+                data[i].nama,
+                data[i].jabatan,
+                data[i].gaji);
+    }
+    fclose(file);
+}
+
+
+float convertGaji(char *str) {
+    char clean[50];
+    int j = 0;
+
+    for(int i = 0; str[i] != '\0'; i++) {
+        if(str[i] != '.') clean[j++] = str[i];
+    }
+    clean[j] = '\0';
+
+    return atof(clean);
 }
 
 
 void tambah() {
-    int id;
-    char nama[50];
-    char jabatan[30];
+    if (jumlah >= MAX) {
+        printf(RED "\nData penuh!\n" RESET);
+        return;
+    }
+
     char gajiStr[50];
-    float gaji;
 
-    file = fopen("data_karyawan.dat", "ab");
+    printf(CYAN "\nMasukkan ID: " RESET);
+    scanf("%d", &data[jumlah].id);
 
-    printf("\nMasukkan ID: ");
-    scanf("%d", &id);
+    printf(CYAN "Masukkan Nama: " RESET);
+    scanf(" %[^\n]", data[jumlah].nama);
 
-    printf("Masukkan Nama: ");
-    scanf(" %[^\n]", nama);
+    printf(CYAN "Masukkan Jabatan: " RESET);
+    scanf(" %[^\n]", data[jumlah].jabatan);
 
-    printf("Masukkan Jabatan: ");
-    scanf(" %[^\n]", jabatan);
-
-    printf("Masukkan Gaji (contoh 80.000.000): ");
+    printf(CYAN "Masukkan Gaji (contoh 3.000.000): " RESET);
     scanf(" %[^\n]", gajiStr);
 
-    gaji = convertGaji(gajiStr);
+    data[jumlah].gaji = convertGaji(gajiStr);
 
-    fwrite(&id, sizeof(int), 1, file);
-    fwrite(nama, sizeof(nama), 1, file);
-    fwrite(jabatan, sizeof(jabatan), 1, file);
-    fwrite(&gaji, sizeof(float), 1, file);
-
-    fclose(file);
+    jumlah++;
+    saveData();
 
     printf(GREEN "\nData berhasil ditambahkan!\n" RESET);
 }
 
 
 void tampil() {
-    int id;
-    char nama[50];
-    char jabatan[30];
-    float gaji;
-
-    file = fopen("data_karyawan.dat", "rb");
-    if(!file) {
-        printf(RED "\nTidak ada data!\n" RESET);
+    if (jumlah == 0) {
+        printf(RED "\nBelum ada data.\n" RESET);
         return;
     }
 
-    printf(CYAN "\n==== DATA KARYAWAN ====\n" RESET);
+    printf(CYAN "\n=========== DATA KARYAWAN ===========\n" RESET);
 
-    while( fread(&id, sizeof(int), 1, file) ) {
-        fread(nama, sizeof(nama), 1, file);
-        fread(jabatan, sizeof(jabatan), 1, file);
-        fread(&gaji, sizeof(float), 1, file);
-
-        printf(GREEN "\nID: %d\nNama: %s\nJabatan: %s\nGaji: %.2f\n" RESET,
-               id, nama, jabatan, gaji);
+    for(int i = 0; i < jumlah; i++) {
+        printf(GREEN "\nID      : %d" RESET, data[i].id);
+        printf(BLUE  "\nNama    : %s" RESET, data[i].nama);
+        printf(YELLOW"\nJabatan : %s" RESET, data[i].jabatan);
+        printf(CYAN  "\nGaji    : %.2f\n" RESET, data[i].gaji);
     }
-
-    fclose(file);
 }
 
-void cari() {
-    int id, cariID, ketemu = 0;
-    char nama[50];
-    char jabatan[30];
-    float gaji;
 
-    printf("\nMasukkan ID yang dicari: ");
+void cari() {
+    int cariID;
+
+    printf(CYAN "\nMasukkan ID yang dicari: " RESET);
     scanf("%d", &cariID);
 
-    file = fopen("data_karyawan.dat", "rb");
-
-    while(fread(&id, sizeof(int), 1, file)) {
-        fread(nama, sizeof(nama), 1, file);
-        fread(jabatan, sizeof(jabatan), 1, file);
-        fread(&gaji, sizeof(float), 1, file);
-
-        if(id == cariID) {
+    for(int i = 0; i < jumlah; i++) {
+        if (data[i].id == cariID) {
             printf(GREEN "\nData ditemukan!\n" RESET);
             printf("ID: %d\nNama: %s\nJabatan: %s\nGaji: %.2f\n",
-                   id, nama, jabatan, gaji);
-            ketemu = 1;
-            break;
+                   data[i].id, data[i].nama, data[i].jabatan, data[i].gaji);
+            return;
         }
     }
-
-    fclose(file);
-
-    if(!ketemu)
-        printf(RED "\nID tidak ditemukan!\n" RESET);
+    printf(RED "\nID tidak ditemukan!\n" RESET);
 }
 
 
 void update() {
-    int id, cariID, ketemu = 0;
-    char nama[50], jabatan[30], gajiStr[50];
-    float gaji;
+    int cariID;
+    char gajiStr[50];
 
-    printf("\nMasukkan ID yang diupdate: ");
+    printf(CYAN "\nMasukkan ID yang akan diupdate: " RESET);
     scanf("%d", &cariID);
 
-    file = fopen("data_karyawan.dat", "rb+");
+    for(int i = 0; i < jumlah; i++) {
+        if (data[i].id == cariID) {
 
-    while(fread(&id, sizeof(int), 1, file)) {
-        fread(nama, sizeof(nama), 1, file);
-        fread(jabatan, sizeof(jabatan), 1, file);
-        fread(&gaji, sizeof(float), 1, file);
+            printf(CYAN "Nama baru: " RESET);
+            scanf(" %[^\n]", data[i].nama);
 
-        if(id == cariID) {
-            printf("Nama baru: ");
-            scanf(" %[^\n]", nama);
+            printf(CYAN "Jabatan baru: " RESET);
+            scanf(" %[^\n]", data[i].jabatan);
 
-            printf("Jabatan baru: ");
-            scanf(" %[^\n]", jabatan);
-
-            printf("Gaji baru (contoh 80.000.000): ");
+            printf(CYAN "Gaji baru: " RESET);
             scanf(" %[^\n]", gajiStr);
-            gaji = convertGaji(gajiStr);
 
-            fseek(file, -(sizeof(int) + sizeof(nama) + sizeof(jabatan) + sizeof(float)), SEEK_CUR);
+            data[i].gaji = convertGaji(gajiStr);
 
-            fwrite(&id, sizeof(int), 1, file);
-            fwrite(nama, sizeof(nama), 1, file);
-            fwrite(jabatan, sizeof(jabatan), 1, file);
-            fwrite(&gaji, sizeof(float), 1, file);
-
+            saveData();
             printf(GREEN "\nData berhasil diperbarui!\n" RESET);
-            ketemu = 1;
-            break;
+            return;
         }
     }
-
-    fclose(file);
-
-    if(!ketemu)
-        printf(RED "\nID tidak ditemukan!\n" RESET);
+    printf(RED "\nID tidak ditemukan!\n" RESET);
 }
-
 
 void hapus() {
-    int id, hapusID, ketemu = 0;
-    char nama[50];
-    char jabatan[30];
-    float gaji;
+    int hapusID;
 
-    printf("\nMasukkan ID yang akan dihapus: ");
+    printf(CYAN "\nMasukkan ID yang akan dihapus: " RESET);
     scanf("%d", &hapusID);
 
-    FILE *temp;
+    for(int i = 0; i < jumlah; i++) {
+        if(data[i].id == hapusID) {
 
-    file = fopen("data_karyawan.dat", "rb");
-    temp = fopen("temp.dat", "wb");
+            for(int j = i; j < jumlah - 1; j++)
+                data[j] = data[j + 1];
 
-    while(fread(&id, sizeof(int), 1, file)) {
-        fread(nama, sizeof(nama), 1, file);
-        fread(jabatan, sizeof(jabatan), 1, file);
-        fread(&gaji, sizeof(float), 1, file);
+            jumlah--;
+            saveData();
 
-        if(id != hapusID) {
-            fwrite(&id, sizeof(int), 1, temp);
-            fwrite(nama, sizeof(nama), 1, temp);
-            fwrite(jabatan, sizeof(jabatan), 1, temp);
-            fwrite(&gaji, sizeof(float), 1, temp);
-        } else {
-            ketemu = 1;
+            printf(GREEN "\nData berhasil dihapus!\n" RESET);
+            return;
         }
     }
-
-    fclose(file);
-    fclose(temp);
-
-    remove("data_karyawan.dat");
-    rename("temp.dat", "data_karyawan.dat");
-
-    if(ketemu)
-        printf(GREEN "\nData berhasil dihapus!\n" RESET);
-    else
-        printf(RED "\nID tidak ditemukan!\n" RESET);
+    printf(RED "\nID tidak ditemukan!\n" RESET);
 }
+
