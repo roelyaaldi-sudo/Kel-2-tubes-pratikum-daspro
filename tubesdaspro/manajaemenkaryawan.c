@@ -37,7 +37,7 @@ int main() {
     loadData();
 
     while(1) {
-        printf(CYAN "\n========== PROGRAM MANAJEMEN KARYAWAN (TXT) ==========\n" RESET);
+        printf(CYAN "\n========== PROGRAM MANAJEMEN KARYAWAN  ==========\n" RESET);
         printf(YELLOW "1. Tambah Karyawan\n" RESET);
         printf(YELLOW "2. Tampilkan Semua Data\n" RESET);
         printf(YELLOW "3. Cari Karyawan\n" RESET);
@@ -221,4 +221,5 @@ void hapus() {
     }
     printf(RED "\nID tidak ditemukan!\n" RESET);
 }
+
 
